@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Inscription</title>
+  <style>
+    /* Mise en forme */
+  </style>
+</head>
+<body>
+  <h1>Inscription</h1>
+  <form id="inscription-form" action="http://localhost:5000/save">
+    <label for="nom">Nom:</label>
+    <input type="text" name="nom" id="nom"><br>
+    <label for="prenom">Prenom:</label>
+    <input type="text" name="prenom" id="prenom"><br>
+    <label for="email">Email:</label>
+    <input type="text" name="email" id="email"><br>
+    <label for="tel">Numero de telephone(facultatif):</label>
+    <input type="text" name="tel" id="tel"><br>
+    <label for="date">Date de naissance:</label>
+    <input type="date" name="date" id="date"><br>
+    <label for="sexe">Sexe(facultatif):</label>
+    <select name="sexe" id="sexe">
+      <option value="masculin">Masculin</option>
+      <option value="feminin">Feminin</option>
+    </select><br>
+    <label for="pays">Pays de résidence:</label>
+    <input type="text" name="pays" id="pays"><br>
+    <label for="entreprise">Entreprise ou organisation pour laquelle vous utilisez notre logiciel:</label>
+    <input type="text" name="entreprise" id="entreprise"><br>
+    <label for="utilisations">Informations sur les utilisations prévues de notre logiciel:</label>
+    <textarea name="utilisations" id="utilisations" rows="4"></textarea><br>
+    <input type="hidden" name="photo_profil" id="photo_profil">
+    <input type="submit" value="Soumettre" onclick="submitForm()">
+  </form>
+  <div id="response"></div>
+  <script>
+    function submitForm() {
+      // Génération de la photo de profil avec l'API Dicebear
+      var userId = generateId();
+      var photoUrl = `https://avatars.dicebear.com/v2/bottts/${userId}.svg`;
+      document.getElementById("photo_profil").value = photoUrl;
+      // Récupération des données du formulaire
+      var formData = new FormData(document.getElementById("inscription-form"));
+        // Envoi des données au serveur
+  fetch("/save", {
+    method: "POST",
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Récupération des données de l'utilisateur
+      fetch("/user_data")
+      .then(response => response.json())
+      .then(userData => {
+// Ouverture d'une nouvelle fenêtre pour afficher les informations de l'utilisateur
+var newWindow = window.location.href = '/user_data'
+newWindow.document.write("<h1>Profil de l'utilisateur</h1>");
+for (var key in userData) {
+if (key !== "photo_profil") {
+  newWindow.document.write("<p>" + key + ": " + userData[key] + "</p>");
+}
+}
+// Affichage de la photo de profil générée
+var img = newWindow.document.createElement("img");
+img.src = userData.photo_profil;
+newWindow.document.body.appendChild(img);
+});
+//Création d'un fichier json pour chaque utilisateur
+var jsonData = JSON.stringify(userData);
+var filename = userData.email + ".json";
+var file = new Blob([jsonData], {type: "application/json"});
+if (window.navigator.msSaveOrOpenBlob) {
+window.navigator.msSaveOrOpenBlob(file, filename);
+} else {
+var a = document.createElement("a"),
+url = URL.createObjectURL(file);
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+setTimeout(function() {
+document.body.removeChild(a);
+window.URL.revokeObjectURL(url);
+}, 0);
+}
+} else {
+document.getElementById("response").innerHTML = "Erreur lors de l'enregistrement des données";
+}
+});
+}
+</script>
+
+</body>
+</html>
